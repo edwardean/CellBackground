@@ -25,65 +25,59 @@
 #import "RoundRect.h"
 #import <QuartzCore/QuartzCore.h>
 
-static CGGradientRef CellBackgroundGradient(BOOL selected)
+static CGGradientRef CellBackgroundGradient(BOOL selected, UIColor *contentColorTop, UIColor *contentColorBottom)
 {
 	static CGGradientRef backgroundGradient = NULL;
 	static CGGradientRef selectedBackgroundGradient = NULL;
 	
-	if ((!selected && !backgroundGradient) ||
-		(selected && !selectedBackgroundGradient))
-	{
-		UIColor *contentColorTop;
-		UIColor *contentColorBottom;
-		if (selected)
-		{
-			contentColorTop = [UIColor colorWithRed:0 green:0 blue:0 alpha:.5];
-			contentColorBottom = [UIColor colorWithRed:0 green:0 blue:0 alpha:.4];
-		}
-		else
-		{
-			contentColorTop = [UIColor colorWithRed:0 green:0 blue:1.0 alpha:1.0];
-			contentColorBottom = [UIColor colorWithRed:0 green:0 blue:0.88 alpha:1.0];
-		}
-
-		CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
-		CGFloat backgroundColorComponents[3][4];
-		memcpy(
-			backgroundColorComponents[0],
-			CGColorGetComponents(contentColorTop.CGColor),
-			sizeof(CGFloat) * 4);
-		memcpy(
-			backgroundColorComponents[1],
-			CGColorGetComponents(contentColorTop.CGColor),
-			sizeof(CGFloat) * 4);
-		memcpy(
-			backgroundColorComponents[2],
-			CGColorGetComponents(contentColorBottom.CGColor),
-			sizeof(CGFloat) * 4);
-		
-		const CGFloat endpointLocations[3] = {0.0, 0.35, 1.0};
-		CGGradientRef gradient =
-			CGGradientCreateWithColorComponents(
-				colorspace,
-				(const CGFloat *)backgroundColorComponents,
-				endpointLocations,
-				3);
-		CFRelease(colorspace);
-		
-		if (selected)
-		{
-			selectedBackgroundGradient = gradient;
-		}
-		else
-		{
-			backgroundGradient = gradient;
-		}
-	}
-	
-	if (selected)
-	{
-		return selectedBackgroundGradient;
-	}
+    if (!contentColorTop && !contentColorBottom) 
+    {
+        if (selected)
+        {
+            contentColorTop = [UIColor colorWithRed:0 green:0 blue:0 alpha:.7];
+            contentColorBottom = [UIColor colorWithRed:0 green:0 blue:0 alpha:.5];
+        }
+        else
+        {
+            contentColorTop = [UIColor colorWithRed:0 green:0 blue:1.0 alpha:1.0];
+            contentColorBottom = [UIColor colorWithRed:0 green:0 blue:0.88 alpha:1.0];
+        }
+    }
+    
+    
+    CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
+    CGFloat backgroundColorComponents[3][4];
+    memcpy(
+           backgroundColorComponents[0],
+           CGColorGetComponents(contentColorTop.CGColor),
+           sizeof(CGFloat) * 4);
+    memcpy(
+           backgroundColorComponents[1],
+           CGColorGetComponents(contentColorTop.CGColor),
+           sizeof(CGFloat) * 4);
+    memcpy(
+           backgroundColorComponents[2],
+           CGColorGetComponents(contentColorBottom.CGColor),
+           sizeof(CGFloat) * 4);
+    
+    const CGFloat endpointLocations[3] = {0.0, 0.35, 1.0};
+    CGGradientRef gradient =
+    CGGradientCreateWithColorComponents(
+                                        colorspace,
+                                        (const CGFloat *)backgroundColorComponents,
+                                        endpointLocations,
+                                        3);
+    CFRelease(colorspace);
+    
+    if (selected)
+    {
+        selectedBackgroundGradient = gradient;
+        return selectedBackgroundGradient;
+    }
+    else
+    {
+        backgroundGradient = gradient;
+    }
 	
 	return backgroundGradient;
 }
@@ -91,21 +85,26 @@ static CGGradientRef CellBackgroundGradient(BOOL selected)
 @implementation CellBackground
 
 @synthesize position;
-@synthesize strokeColor;
+@synthesize strokeColor     = _strokeColor;
+@synthesize topColor        = _topColor;
+@synthesize bottomColor     = _bottomColor;
+
 
 //
 // init
 //
 // Init method for the object.
 //
-- (id)initForTableView:(UITableView*)table andIndexPath:(NSIndexPath*)indexPath selected:(BOOL)isSelected grouped:(BOOL)isGrouped
+- (id)initWithTableView:(UITableView*)table indexPath:(NSIndexPath*)index selected:(BOOL)isSelected topColor:(UIColor *)top bottomColor:(UIColor *)bottom
 {
 	self = [super init];
 	if (self != nil)
 	{
-        [self calculatePositionForIndex:indexPath inTableView:table];
+        [self calculatePositionForIndex:index inTableView:table];
 		selected = isSelected;
-		groupBackground = isGrouped;
+		groupBackground = [table style] == UITableViewStyleGrouped ? YES : NO;
+        self.topColor = top;
+        self.bottomColor = bottom;
 		self.strokeColor = [UIColor lightGrayColor];
 		self.backgroundColor = [UIColor clearColor];
 		self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -205,10 +204,10 @@ static CGGradientRef CellBackgroundGradient(BOOL selected)
         
 	CGContextDrawLinearGradient(
 		context,
-		CellBackgroundGradient(selected),
+		CellBackgroundGradient(selected, self.topColor, self.bottomColor),
 		startPoint,
 		endPoint,
-		0);
+		0); 
 	
 	if (groupBackground)
 	{
@@ -240,6 +239,7 @@ static CGGradientRef CellBackgroundGradient(BOOL selected)
 		CGContextStrokePath(context);
 	}
 }
+
 @end
 
 

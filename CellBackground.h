@@ -41,10 +41,11 @@ typedef enum
 }
 
 @property (nonatomic, assign) PageCellGroupPosition position;
+@property (nonatomic, retain) UIColor *topColor;
+@property (nonatomic, retain) UIColor *bottomColor;
 @property (nonatomic, retain) UIColor *strokeColor;
 
-- (id)initForTableView:(UITableView*)table andIndexPath:(NSIndexPath*)indexPath selected:(BOOL)isSelected grouped:(BOOL)isGrouped;
-
+- (id)initWithTableView:(UITableView*)table indexPath:(NSIndexPath*)index selected:(BOOL)isSelected topColor:(UIColor *)top bottomColor:(UIColor *)bottom;
 @end
 
 
